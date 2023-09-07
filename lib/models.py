@@ -2,17 +2,16 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-engine = create_engine("sqlite:///restraunt_reviews.db")
 Base = declarative_base()
 
 class Restaurant(Base):
     __tablename__ = 'restaurants'
 
     id = Column(Integer, primary_key=True)
-    names = Column(String, nullable=False)
+    name = Column(String, nullable=False)
     price = Column(Integer, nullable=False)
 
-    reviews = relationship('Review', back_populates='restaurant')
+    # Define the many-to-many relationship with Customer
     customers = relationship('Customer', secondary='reviews')
 
 class Customer(Base):
@@ -22,7 +21,8 @@ class Customer(Base):
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
 
-    reviews = relationship('Review', back_populates='customer')
+    # Define the many-to-many relationship with Restaurant
+    restaurants = relationship('Restaurant', secondary='reviews')
 
 class Review(Base):
     __tablename__ = 'reviews'
