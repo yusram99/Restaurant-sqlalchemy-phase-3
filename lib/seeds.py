@@ -1,21 +1,67 @@
+#!/usr/bin/env python3
+
+from faker import Faker
+import random
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base, Restaurant, Customer, Review
 
-engine = create_engine('sqlite:///restaurant_reviews.db')
+from models import Restaurant, Customer, Review
+from models import Base, engine
+
 Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
-session = Session()
 
-# Create sample data
-restaurant1 = Restaurant(name='Restaurant A', price=3)
-restaurant2 = Restaurant(name='Restaurant B', price=4)
-customer1 = Customer(first_name='John', last_name='Doe')
-customer2 = Customer(first_name='Jane', last_name='Smith')
-review1 = Review(star_rating=5, customer=customer1, restaurant=restaurant1)
-review2 = Review(star_rating=4, customer=customer2, restaurant=restaurant1)
-review3 = Review(star_rating=3, customer=customer1, restaurant=restaurant2)
+fake = Faker()
 
-# Add data to the session and commit
-session.add_all([restaurant1, restaurant2, customer1, customer2, review1, review2, review3])
+if __name__ == '__main__':
+    
+    engine = create_engine('sqlite:///restaurant_database.db')
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+# clear old data
+session.query(Restaurant).delete()
+session.query(Customer).delete()
+session.query(Review).delete()
 session.commit()
+
+
+# Add a console message so we can see output when the seed file runs
+print("Seeding Restaurant info...")
+
+restaurants = [
+    Restaurant(
+        name=fake.name(),
+        price=random.randint(1000, 50000)
+    )
+for i in range(10)]
+
+session.add_all(restaurants)
+session.commit()
+
+print("Seeding Customers info...")
+
+customers = [
+    Customer(
+        first_name=fake.first_name(),
+        last_name = fake.last_name()
+    )
+for i in range(10)]
+
+session.add_all(customers)
+session.commit()
+
+print("Seeding Reviews info...")
+
+for restaurant in restaurants:
+        for i in range(random.randint(1, 10)):
+            customer = random.choice(customers)
+            review = Review(
+                restaurant_id=restaurant.id,
+                description=fake.sentence(),
+                star_rating=random.randint(1, 10),
+                customer_id=customer.id
+            )
+            session.add(review)
+    
+session.commit()
+session.close()
